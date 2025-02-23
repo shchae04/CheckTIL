@@ -4,7 +4,6 @@
 
 **클래스풀(Classful)** 과 **클래스리스(Classless)** 주소 체계의 차이와 특징에 대해 정리해 봅니다.
 
----
 
 ## 1. 클래스풀 IP 주소 체계 (Classful Addressing)
 
