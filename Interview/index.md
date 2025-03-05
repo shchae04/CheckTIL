@@ -6,6 +6,7 @@
 - [ACID (원자성, 일관성, 고립성, 지속성)](ACID.md)
 
 ## 아키텍처 & 설계
+- [SOLID 원칙](SOLID.md)
 - [DDD (Domain-Driven Design)](DDD.md)
 - [MSA (Microservice Architecture)](msa.md)
 - [DTO와 VO의 차이](DTO_VO.md)
