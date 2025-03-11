@@ -1,6 +1,3 @@
-# 기술 면접 준비 자료
-
-이 디렉토리에는 기술 면접 준비를 위한 다양한 주제의 학습 자료가 포함되어 있습니다.
 
 ## 데이터베이스
 - [ACID (원자성, 일관성, 고립성, 지속성)](ACID.md)
@@ -23,12 +20,14 @@
 - [환경 변수 보안](secured_Environment.md)
 - [URL 인코딩](url_encoding_%.md)
 - [대칭키와 비대칭키](symmetric_asymmetric_keys.md)
+- [CORS (Cross-Origin Resource Sharing)](CORS.md)
 
 ## Java & JVM
 - [동등성과 동일성](equality_identity.md)
 - [I/O와 NIO](io_nio.md)
 - [JVM 가비지 컬렉션](jvm_gc.md)
 - [Null을 반환하는 것의 문제점](why_null_return.md)
+- [Spring Bean의 생명주기](spring_bean_lifecycle.md)
 
 ## 클라우드 & DevOps
 - [클라우드 네이티브](cloud_native.md)
