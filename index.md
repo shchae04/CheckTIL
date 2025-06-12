@@ -30,6 +30,8 @@
 - [Swagger API 사용법](Web/swagger_api_usage.md)
 
 ### 데이터베이스
+- [NoSQL 데이터베이스 개념 및 사용법](CS/Database/nosql_databases.md)
+- [CDC (Change Data Capture)](CS/Database/change_data_capture.md)
 - [ACID (원자성, 일관성, 고립성, 지속성)](Interview/ACID.md)
 - [데이터베이스 인덱스의 동작원리](Interview/database_index_principles.md)
 - [조회 트래픽을 고려한 DB 인덱스 설계](Interview/db_index_design_for_query_traffic.md)
@@ -92,6 +94,7 @@
 - [Java 네트워크 I/O 병목 현상 해결 방법](Interview/java_network_io_bottleneck_solutions.md)
 - [동등성과 동일성](Interview/equality_identity.md)
 - [I/O와 NIO](Interview/io_nio.md)
+- [Spring Reactor와 NIO 서버 구현 시 줄개행 문제 해결](Interview/spring_reactor_nio.md)
 - [JVM 가비지 컬렉션](Interview/jvm_gc.md)
 - [Null을 반환하는 것의 문제점](Interview/why_null_return.md)
 - [동시성 처리 방법](Interview/concurrency_handle.md)
