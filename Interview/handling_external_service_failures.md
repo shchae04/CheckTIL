@@ -117,6 +117,146 @@
 - 메시지 큐 활용 (Kafka, RabbitMQ 등)
 - 리액티브 프로그래밍 (WebFlux, Project Reactor 등)
 
+## 구현 예제
+
+### Spring Boot에서 Resilience4j를 사용한 구현
+
+Resilience4j는 Java 애플리케이션을 위한 경량 장애 허용 라이브러리로, 서킷 브레이커, 재시도, 타임아웃 등의 기능을 제공합니다.
+
+#### 의존성 추가 (Maven)
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-aop</artifactId>
+</dependency>
+<dependency>
+    <groupId>io.github.resilience4j</groupId>
+    <artifactId>resilience4j-spring-boot2</artifactId>
+    <version>1.7.0</version>
+</dependency>
+```
+
+#### application.yml 설정
+
+```yaml
+resilience4j:
+  circuitbreaker:
+    instances:
+      externalServiceA:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        slidingWindowType: COUNT_BASED
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10000
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+  retry:
+    instances:
+      externalServiceA:
+        maxAttempts: 3
+        waitDuration: 1000
+        retryExceptions:
+          - java.io.IOException
+          - java.net.ConnectException
+  timelimiter:
+    instances:
+      externalServiceA:
+        timeoutDuration: 2s
+        cancelRunningFuture: true
+  bulkhead:
+    instances:
+      externalServiceA:
+        maxConcurrentCalls: 10
+        maxWaitDuration: 10ms
+```
+
+#### 서비스 구현
+
+```java
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
+import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
+import io.github.resilience4j.bulkhead.annotation.Bulkhead;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
+@Service
+public class ExternalServiceClient {
+
+    private final RestTemplate restTemplate;
+
+    public ExternalServiceClient(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+    }
+
+    @CircuitBreaker(name = "externalServiceA", fallbackMethod = "fallbackMethod")
+    @Retry(name = "externalServiceA")
+    @TimeLimiter(name = "externalServiceA")
+    @Bulkhead(name = "externalServiceA")
+    public String callExternalService() {
+        return restTemplate.getForObject("https://external-service-url/api/resource", String.class);
+    }
+
+    public String fallbackMethod(Exception e) {
+        // 로깅
+        log.error("외부 서비스 호출 실패: {}", e.getMessage());
+
+        // 캐시된 데이터 반환 또는 기본값 제공
+        return "기본 응답 데이터";
+    }
+}
+```
+
+#### RestTemplate 타임아웃 설정
+
+```java
+@Configuration
+public class RestTemplateConfig {
+
+    @Bean
+    public RestTemplate restTemplate() {
+        HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory();
+        factory.setConnectTimeout(3000); // 연결 타임아웃: 3초
+        factory.setReadTimeout(5000);    // 읽기 타임아웃: 5초
+
+        return new RestTemplate(factory);
+    }
+}
+```
+
+### WebClient를 사용한 비동기 구현 (Spring WebFlux)
+
+WebClient는 Spring WebFlux의 비동기 HTTP 클라이언트로, 논블로킹 I/O를 지원합니다.
+
+```java
+@Service
+public class AsyncExternalServiceClient {
+
+    private final WebClient webClient;
+
+    public AsyncExternalServiceClient(WebClient.Builder webClientBuilder) {
+        this.webClient = webClientBuilder
+            .baseUrl("https://external-service-url")
+            .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+            .build();
+    }
+
+    public Mono<String> callExternalServiceAsync() {
+        return webClient.get()
+            .uri("/api/resource")
+            .retrieve()
+            .bodyToMono(String.class)
+            .timeout(Duration.ofSeconds(3))  // 타임아웃 설정
+            .retryWhen(Retry.backoff(3, Duration.ofSeconds(1)))  // 재시도 설정
+            .onErrorResume(e -> {
+                log.error("외부 서비스 호출 실패: {}", e.getMessage());
+                return Mono.just("기본 응답 데이터");  // 폴백
+            });
+    }
+}
+```
+
 ## 결론
 
 동기 방식으로 외부 서비스를 호출할 때는 다양한 장애 대응 전략을 적용하여 시스템의 안정성을 확보해야 합니다. 타임아웃, 서킷 브레이커, 재시도, 폴백, 벌크헤드 등의 패턴을 상황에 맞게 조합하여 사용하면 외부 서비스 장애가 내부 시스템에 미치는 영향을 최소화할 수 있습니다.
