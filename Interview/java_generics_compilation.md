@@ -355,3 +355,113 @@ Java Generics는 컴파일 시점에 강력한 타입 안전성을 제공하면�
 - [Oracle Java Generics Tutorial](https://docs.oracle.com/javase/tutorial/java/generics/)
 - [Effective Java 3rd Edition - Item 26-31](https://www.oreilly.com/library/view/effective-java-3rd/9780134686097/)
 - [Java Language Specification - Chapter 4.5](https://docs.oracle.com/javase/specs/jls/se17/html/jls-4.html#jls-4.5)
+
+## 9. 제네릭의 변성(Variance): 무공변/공변/반공변, PECS, <?> vs <Object>
+
+### 9.1 무공변 (Invariant) — Java 제네릭의 기본
+- Java의 제네릭 타입은 기본적으로 무공변입니다. 즉, `S`가 `T`의 하위 타입이어도 `List<S>`는 `List<T>`의 하위 타입이 아닙니다.
+- 타입이 정확히 일치하지 않으면 컴파일 오류가 납니다. 이는 타입 안전성을 보장하기 위한 설계입니다.
+
+```java
+class Animal {}
+class Cat extends Animal {}
+
+// 모두 컴파일 오류
+List<Animal> animals = new ArrayList<Cat>();
+List<Cat> cats = new ArrayList<Animal>();
+```
+
+참고: 배열은 공변(covariant)이므로 `Animal[] a = new Cat[10];`이 가능하지만, 런타임에 `ArrayStoreException` 위험이 있습니다. 제네릭은 이런 문제를 컴파일 시점에 차단합니다.
+
+---
+
+### 9.2 공변 (Covariant) — 읽기 전용 Producer (`? extends T`)
+- 정의: `S`가 `T`의 하위 타입일 때, `? extends T`는 "T 또는 그 하위"를 허용합니다.
+- 특징: 읽기는 안전(최소 `T`로 읽힘), 쓰기는 `null`만 가능.
+
+```java
+// 생산자: 읽기 전용
+public static void printAnimals(List<? extends Animal> herd) {
+    for (Animal a : herd) {          // OK: 최소 Animal로 읽힘
+        System.out.println(a);
+    }
+    // herd.add(new Animal());       // 컴파일 오류
+    // herd.add(new Cat());          // 컴파일 오류
+    herd.add(null);                  // 유일하게 허용
+}
+```
+
+언제 쓰나: "꺼내서 사용(생산)"하는 컬렉션을 전달받을 때.
+
+---
+
+### 9.3 반공변 (Contravariant) — 쓰기 전용 Consumer (`? super S`)
+- 정의: `S`가 `T`의 하위 타입일 때, `? super S`는 "S 또는 그 상위"를 허용합니다.
+- 특징: `S`(및 하위 타입)로 쓰기는 안전, 읽기는 `Object`로만 안전.
+
+```java
+// 소비자: 쓰기 전용
+public static void addCats(List<? super Cat> sink) {
+    sink.add(new Cat());             // OK: Cat 추가 가능
+    // 읽기 시에는 타입을 알 수 없어 Object만 안전
+    Object x = sink.get(0);          // OK
+    // Cat c = sink.get(0);          // 컴파일 오류 (캐스팅 필요)
+}
+```
+
+언제 쓰나: "넣어주기(소비)"만 하는 컬렉션에 데이터를 추가할 때.
+
+---
+
+### 9.4 PECS 원칙
+- PECS = Producer Extends, Consumer Super
+  - Producer(꺼내 쓰는 쪽)는 `? extends T`
+  - Consumer(넣어 주는 쪽)는 `? super T`
+
+```java
+public static void produce(List<? extends Animal> animals) {
+    for (Animal a : animals) {
+        System.out.println(a);
+    }
+}
+
+public static void consume(List<? super Cat> cats) {
+    cats.add(new Cat());
+}
+```
+
+---
+
+### 9.5 `<?>` vs `<Object>` 차이
+- `<?>` (Unbounded wildcard)
+  - 모든 타입의 리스트를 받을 수 있음: `List<String>`, `List<Integer>` 등.
+  - 그러나 요소 추가는 `null`만 가능(타입 안전성 문제 때문). 사실상 읽기 전용.
+- `<Object>`
+  - 파라미터로는 오직 `List<Object>`만 받을 수 있음. `List<String>`은 전달 불가(무공변).
+  - 모든 `Object`를 추가할 수 있어 읽기/쓰기 모두 가능.
+
+```java
+void takesWildcard(List<?> list) {
+    Object o = list.isEmpty() ? null : list.get(0); // 읽기는 Object로
+    // list.add("x"); // 컴파일 오류
+    list.add(null);    // 유일하게 허용
+}
+
+void takesObjectList(List<Object> list) {
+    list.add("x");    // OK
+    list.add(1);       // OK
+}
+
+List<String> ls = new ArrayList<>();
+takesWildcard(ls);       // OK: 어떤 타입의 List든 가능
+// takesObjectList(ls);  // 컴파일 오류: List<String> != List<Object>
+```
+
+---
+
+### 9.6 요약
+- Java 제네릭은 기본적으로 무공변이다.
+- `? extends T`는 공변: 읽기(Producer) 용도, 쓰기는 `null`만.
+- `? super S`는 반공변: 쓰기(Consumer) 용도, 읽기는 `Object`로만 안전.
+- PECS: Producer는 Extends, Consumer는 Super.
+- `<?>`는 어떤 리스트든 받지만 쓰기 불가(사실상 읽기 전용), `<Object>`는 `List<Object>`에 한해 읽기/쓰기 가능.
