@@ -111,5 +111,7 @@
 ## 10) 참고 및 관련 문서
 - 배경 원문(요약 기반): 제공된 이슈 설명
 - 관련: ./good_architecture_design.md
+- LLM 기반 Query 시스템: ./llm_query_system.md
+- LLM 대응 전략: ./llm_response_strategy.md
 - 인터뷰/웹 흐름: ../../Interview/restful_api.md, ../../Interview/spring_request_flow.md
 - DB 동시성: ../Database/database_concurrency_control.md
