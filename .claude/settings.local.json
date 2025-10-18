@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add:*)",
+      "WebSearch",
+      "WebFetch(domain:www.notion.com)",
+      "Bash(cat:*)",
+      "WebFetch(domain:medium.com)",
+      "WebFetch(domain:javarevisited.blogspot.com)",
+      "Bash(git reset:*)",
+      "Bash(git pull:*)",
+      "WebFetch(domain:glasslego.tistory.com)",
+      "WebFetch(domain:github.com)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
